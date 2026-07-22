@@ -1,114 +1,52 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
+  "project": {
+    "name": "SGA - Sistema de Gestión de Compras"
+  },
   "services": [
     {
-      "name": "sgca-db",
+      "name": "db",
       "source": {
-        "image": "postgresql:16-alpine"
-      },
-      "variables": {
-        "POSTGRES_USER": "${{DB_USER}}",
-        "POSTGRES_PASSWORD": "${{DB_PASSWORD}}",
-        "POSTGRES_DB": "${{DB_NAME}}"
-      },
-      "startCommand": "docker-entrypoint.sh postgres"
+        "service": "postgresql"
+      }
     },
     {
-      "name": "sgca-backend",
+      "name": "backend",
       "source": {
         "repo": "alessychavez-prog/SGA",
         "branch": "main"
       },
       "build": {
-        "nixpacks": {
-          "phases": {
-            "setup": {
-              "nixPkgs": ["...", "postgresql"]
-            },
-            "build": {
-              "dependsOn": ["setup"],
-              "cmds": [
-                "cd backend",
-                "npm ci",
-                "npx prisma generate",
-                "npm run build"
-              ]
-            }
-          }
-        },
         "rootDirectory": "backend"
       },
-      "deploy": {
-        "startCommand": "cd backend && node start-railway.js",
-        "healthcheckPath": "/api/auth/login",
-        "healthcheckTimeout": 100,
-        "restartPolicyType": "ON_FAILURE",
-        "restartPolicyMaxRetries": 10
-      },
       "variables": {
-        "DATABASE_URL": "postgresql://${{DB_USER}}:${{DB_PASSWORD}}@${{sgca-db.RAILWAY_PRIVATE_DOMAIN}}:5432/${{DB_NAME}}?schema=public",
+        "DATABASE_URL": "${{db.DATABASE_URL}}",
         "JWT_SECRET": "${{JWT_SECRET}}",
         "JWT_EXPIRES_IN": "24h",
         "NODE_ENV": "production",
         "PORT": "3001"
       },
-      "dependsOn": [
-        {
-          "service": "sgca-db"
-        }
-      ]
+      "dependsOn": ["db"]
     },
     {
-      "name": "sgca-frontend",
+      "name": "frontend",
       "source": {
         "repo": "alessychavez-prog/SGA",
         "branch": "main"
       },
       "build": {
-        "nixpacks": {
-          "phases": {
-            "build": {
-              "cmds": [
-                "cd frontend",
-                "npm ci",
-                "npm run build"
-              ]
-            }
-          }
-        },
         "rootDirectory": "frontend"
       },
-      "deploy": {
-        "startCommand": "cd frontend && npm start",
-        "restartPolicyType": "ON_FAILURE",
-        "restartPolicyMaxRetries": 10
-      },
       "variables": {
-        "NEXT_PUBLIC_API_URL": "https://${{sgca-backend.RAILWAY_PUBLIC_DOMAIN}}/api"
+        "NEXT_PUBLIC_API_URL": "https://${{backend.RAILWAY_PUBLIC_DOMAIN}}/api"
       },
-      "dependsOn": [
-        {
-          "service": "sgca-backend"
-        }
-      ]
+      "dependsOn": ["backend"]
     }
   ],
   "variables": {
-    "DB_USER": {
-      "description": "Usuario de PostgreSQL",
-      "value": "sgca_user"
-    },
-    "DB_PASSWORD": {
-      "description": "Contraseña de PostgreSQL",
-      "value": "sgca_password"
-    },
-    "DB_NAME": {
-      "description": "Nombre de la base de datos",
-      "value": "sgca_db"
-    },
     "JWT_SECRET": {
-      "description": "Clave secreta para tokens JWT (IMPORTANTE: CAMBIAR ESTE VALOR POR UNO SEGURO)",
-      "value": "cambia-esta-clave-secreta-en-produccion"
+      "description": "Clave secreta para tokens JWT",
+      "value": "dcf34d78-dd67-4cb8-bf26-39c6cccb43f4"
     }
   }
 }
