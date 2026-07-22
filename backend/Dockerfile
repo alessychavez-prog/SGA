@@ -39,13 +39,10 @@ RUN npm ci
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/start.sh ./
-
-# Dar permisos de ejecución al script
-RUN chmod +x ./start.sh
+COPY --from=builder /app/start-railway.js ./
 
 # Exponer puerto
 EXPOSE 3001
 
 # Comando para ejecutar la aplicación
-CMD ["./start.sh"]
+CMD ["node", "start-railway.js"]
