@@ -21,13 +21,13 @@ RUN npm run build
 
 
 # Stage 2: Production
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 
 # Establecer directorio de trabajo
 WORKDIR /app
 
-# Instalar bash (para el script de inicialización)
-RUN apk add --no-cache bash
+# Instalar bash y certificados (node:20-slim incluye OpenSSL/libssl que Prisma necesita)
+RUN apt-get update && apt-get install -y bash ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Copiar package.json y package-lock.json
 COPY package*.json ./
@@ -37,7 +37,7 @@ RUN npm ci
 
 # Copiar código compilado y archivos necesarios
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/start-railway.js ./
 
