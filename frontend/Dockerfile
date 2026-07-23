@@ -4,6 +4,10 @@ FROM node:20 AS builder
 # Establecer directorio de trabajo
 WORKDIR /app
 
+# Recibir variable desde Railway
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Copiar package.json y package-lock.json
 COPY package*.json ./
 
